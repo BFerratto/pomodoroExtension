@@ -9,3 +9,4 @@ Pomodoro timer for Chrome users
 - Keep a pomodoro counter to keep you on track!
 
 
+HTML inspired from here: https://github.com/Freshman-tech/pomodoro-starter-files
