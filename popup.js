@@ -21,6 +21,9 @@ function onOpen() {
   chrome.runtime.sendMessage({ type: GET_STATE }, (serialized) => {
     setState(serialized)
     updateUIFromState();
+    if (state.current.isRunning()) {
+      onTimerStart();
+    }
   })
 }
 
