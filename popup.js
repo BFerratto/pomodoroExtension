@@ -28,6 +28,9 @@ function onOpen() {
 }
 
 function onTimerStart() {
+  if (state.current.intervalId) {
+    clearInterval(state.current.intervalId);
+  }
   state.current.intervalId = setInterval(updateTimerDisplayFromState, 1000);
 }
 function onTimerStop() {
