@@ -1,35 +1,23 @@
-let timer = null;
-let isRunning = false;
-let paused = false;
-
-let currentMode = 'pomodoro';
-let sessionCount = 0;
-let remainingTime = 25 * 60;
-
-const timerSettings = {
-  pomodoro: 25,
-  shortBreak: 5,
-  longBreak: 15,
-  longBreakInterval: 4,
-};
+import { resetState, state } from './state.js';
+import {
+  AUTOMATIC_CHANGED,
+  GET_STATE,
+  RESET_TIMER,
+  TOOGLE_TIMER,
+  SWITCH_MODE,
+  messages,
+  TIMER_STARTED,
+  TIMER_STOPPED
+} from "./types.js";
 
 function updateStorage() {
-  chrome.storage.local.set({
-    remainingTime,
-    currentMode,
-    sessionCount,
-    isRunning,
-    paused,
-  });
+  chrome.storage.local.set(state.current.serialize());
 }
 
 function notifySessionEnd(nextMode) {
-  console.log(`🔔 Notifying for next mode: ${nextMode}`); 
-  const messages = {
-    shortBreak: "Pomodoro complete! Time for a short break.",
-    longBreak: "Nice work! Time for a long break.",
-    pomodoro: "Break over! Ready for another Pomodoro?"
-  };
+  console.log(`🔔 Notifying for next mode: ${nextMode}`);
+  chrome.runtime.sendMessage({ type: TIMER_STOPPED, state: state.current.serialize() });
+
 
   chrome.notifications.create({
     type: "basic",
@@ -38,83 +26,74 @@ function notifySessionEnd(nextMode) {
     message: messages[nextMode] || "Session complete.",
     priority: 1
   });
+  updateStorage();
 }
 
 
 function startBackgroundTimer() {
-  if (isRunning) return;
-  isRunning = true;
-  paused = false;
+  if (state.current.isRunning()) return;
+  state.current.start();
   updateStorage();
 
-  timer = setInterval(() => {
-    remainingTime--;
-    updateStorage();
+  state.current.intervalId = setInterval(() => {
+    const remainingTime = state.current.getRemainingTime();
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime - minutes * 60;
+    const text = minutes ? ` ${String(minutes).padStart(2, '0')} m` : `${String(seconds).padStart(2, '0')}s`;
+    chrome.action.setBadgeText({ text });
 
-    if (remainingTime <= 0) {
-      clearInterval(timer);
-      isRunning = false;
-
-      // Decide next mode
-      let nextMode;
-      if (currentMode === 'pomodoro') {
-        sessionCount++;
-        chrome.storage.local.set({ sessionCount });
-        nextMode = (sessionCount % timerSettings.longBreakInterval === 0)
-          ? 'longBreak'
-          : 'shortBreak';
-      } else {
-        nextMode = 'pomodoro';
-      }
-
-      notifySessionEnd(nextMode);
-
-      currentMode = nextMode;
-      remainingTime = timerSettings[currentMode] * 60;
-      updateStorage();
-
-    }
   }, 1000);
+
+  state.current.timeoutId = setTimeout(() => {
+    clearInterval(state.current.intervalId);
+    clearTimeout(state.current.timeoutId);
+    chrome.action.setBadgeText({ text: `` });
+    const nextMode = state.current.onEnd();
+
+    notifySessionEnd(nextMode);
+    if (state.current.isAutomatic) {
+      startBackgroundTimer();
+    }
+  }, state.current.getRemainingTime() * 1000);
+  chrome.runtime.sendMessage({ type: TIMER_STARTED, state: state.current.serialize() });
+
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'START_OR_PAUSE_TIMER') {
-    if (isRunning) {
-      clearInterval(timer);
-      isRunning = false;
-      paused = true;
-    } else {
-      startBackgroundTimer();
+  switch (message.type) {
+    case TOOGLE_TIMER: {
+      if (state.current.isRunning()) {
+        clearInterval(state.current.intervalId);
+        clearTimeout(state.current.timeoutId);
+        state.current.pause();
+      } else {
+        startBackgroundTimer();
+      }
+      updateStorage();
+      break;
     }
-    updateStorage();
-  }
-
-  if (message.type === 'RESET_TIMER') {
-    clearInterval(timer);
-    isRunning = false;
-    paused = false;
-    sessionCount = 0;
-    remainingTime = timerSettings[currentMode] * 60;
-    updateStorage();
-  }
-
-  if (message.type === 'SWITCH_MODE') {
-    clearInterval(timer);
-    isRunning = false;
-    paused = false;
-    currentMode = message.mode;
-    remainingTime = timerSettings[message.mode] * 60;
-    updateStorage();
-  }
-
-  if (message.type === 'GET_STATE') {
-    sendResponse({
-      remainingTime,
-      currentMode,
-      sessionCount,
-      isRunning,
-      paused,
-    });
+    case RESET_TIMER: {
+      clearInterval(state.current.intervalId);
+      resetState();
+      remainingTime = state.current.getSessionDuration();
+      updateStorage();
+      break;
+    }
+    case SWITCH_MODE: {
+      clearInterval(state.current.intervalId);
+      state.current.stop()
+      remainingTime = state.current.getSessionDuration()
+      updateStorage();
+      break;
+    }
+    case GET_STATE: {
+      sendResponse(state.current.serialize());
+      break;
+    }
+    case AUTOMATIC_CHANGED: {
+      state.current.isAutomatic = message.isAutomatic
+      break;
+    }
   }
 });
 

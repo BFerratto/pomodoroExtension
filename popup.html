@@ -1,50 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Pomodoro</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <main class="app">
-      <div class="timerBlock">
-        <div class="button-container" id="mode-buttons">
-          <button
-            class="button active mode-button"
-            id="pomodoro"
-          >
-            Pomodoro
-          </button>
-          <button
-            class="button mode-button"
-            id="short-break"
-          >
-            Short break
-          </button>
-          <button
-            class="button mode-button"
-            id="long-break"
-          >
-            Long break
-          </button>
-        </div>
-        <div class="timer" id="timer">
-          <span id="minutes">25</span>
-          <span class="separator">:</span>
-          <span id="seconds">00</span>
-        </div>
-        
-        <div class="button-container" id="mode-buttons">
-          <p>Completed: <span id="pomodoro-count">0</span></p>
-            <button class="main-button" id="start-btn">
-                Start
-              </button>
-              <button class="main-button" id="reset-btn">
-                Reset
-            </button>
-        </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Pomodoro</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+  <main class="app">
+    <div class="timerBlock">
+      <div class="button-container" id="mode-buttons">
+        <button class="button active mode-button" id="pomodoro">
+          Pomodoro
+        </button>
+        <button class="button mode-button" id="short-break">
+          Short break
+        </button>
+        <button class="button mode-button" id="long-break">
+          Long break
+        </button>
       </div>
-    </main>
-    <script src="popup.js"></script>
-  </body>
+      <div class="timer" id="timer">
+        <span id="minutes">25</span>
+        <span class="separator">:</span>
+        <span id="seconds">00</span>
+      </div>
+
+      <div class="button-container" id="mode-buttons">
+        <p>Completed: <span id="pomodoro-count">0</span></p>
+        <button class="main-button" id="start-btn">
+          Start
+        </button>
+        <button class="main-button" id="reset-btn">
+          Reset
+        </button>
+      </div>
+      <label for="isAutomatic">
+        Automatic <input type="checkbox" name="isAutomatic" id="isAutomatic" value="1" checked="" />
+      </label>
+    </div>
+  </main>
+  <script src="popup.js" type="module"></script>
+</body>
+
 </html>
