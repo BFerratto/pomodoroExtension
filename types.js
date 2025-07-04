@@ -8,6 +8,7 @@ export const RESET_TIMER = 'RESET_TIMER';
 export const SWITCH_MODE = 'SWITCH_MODE';
 export const AUTOMATIC_CHANGED = 'AUTOMATIC_CHANGED';
 export const TIMER_STARTED = 'TIMER_STARTED';
+export const TIMER_PAUSED = 'TIMER_PAUSED';
 export const TIMER_STOPPED = 'TIMER_STOPPED';
 /**
  * @todo change remaining time to be in Milliseconds so we can have a brief interval

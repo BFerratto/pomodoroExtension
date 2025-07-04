@@ -7,7 +7,8 @@ import {
   SWITCH_MODE,
   MODES,
   TIMER_STARTED,
-  TIMER_STOPPED
+  TIMER_STOPPED,
+  TIMER_PAUSED
 } from './types.js'
 
 
@@ -28,6 +29,7 @@ function onOpen() {
 }
 
 function onTimerStart() {
+
   if (state.current.intervalId) {
     clearInterval(state.current.intervalId);
   }
@@ -39,6 +41,8 @@ function onTimerStop() {
   updateUIFromState();
 
 }
+
+const onTimerPause = onTimerStop
 
 
 function updateTimerDisplayFromState() {
@@ -130,13 +134,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       onTimerStart();
       break;
     }
-
-  }
-  switch (message.type) {
     case TIMER_STOPPED: {
-
       setState(message.state);
       onTimerStop();
+      break;
+    }
+    case TIMER_PAUSED: {
+      setState(message.state);
+      onTimerPause();
       break;
     }
 

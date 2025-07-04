@@ -20,10 +20,12 @@ const initialState = {
     },
     getRemainingTime() {
         const duration = this.getSessionDuration()
-        if (!this.isRunning()) {
+        if (this.isStopped()) {
             return duration;
         }
-
+        if (this.isPaused()) {
+            return duration - Math.floor(this.elapsedDateTime / 1000)
+        }
         const totalTime = new Date().getTime() - this.startDateTime + this.elapsedDateTime
         return duration - Math.floor(totalTime / 1000)
     },

@@ -7,7 +7,8 @@ import {
   SWITCH_MODE,
   messages,
   TIMER_STARTED,
-  TIMER_STOPPED
+  TIMER_STOPPED,
+  TIMER_PAUSED
 } from "./types.js";
 
 function updateStorage() {
@@ -66,6 +67,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         clearInterval(state.current.intervalId);
         clearTimeout(state.current.timeoutId);
         state.current.pause();
+        chrome.runtime.sendMessage({ type: TIMER_PAUSED, state: state.current.serialize() });
+
       } else {
         startBackgroundTimer();
       }
