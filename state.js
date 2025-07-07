@@ -29,7 +29,7 @@ const initialState = {
     return duration - Math.floor(totalTime / 1000);
   },
   getSessionDuration() {
-    return TIMES[this.mode]; //* 60
+    return TIMES[this.mode] * 60;
   },
   start() {
     const wasPaused = this.isPaused();

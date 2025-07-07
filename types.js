@@ -35,3 +35,8 @@ export const messages = {
   [MODES.LONG_BREAK]: "Nice work! Time for a long break.",
   [MODES.WORK]: "Break over! Ready for another Pomodoro?",
 };
+export const colors = {
+  [MODES.WORK]: [248, 113, 113, 255],
+  [MODES.SHORT_BREAK]: [225, 217, 79, 255],
+  [MODES.LONG_BREAK]: [0, 0, 153, 255],
+};

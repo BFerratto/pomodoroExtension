@@ -9,6 +9,7 @@ import {
   TIMER_STARTED,
   TIMER_STOPPED,
   TIMER_PAUSED,
+  colors,
 } from "./types.js";
 
 function updateStorage() {
@@ -17,34 +18,44 @@ function updateStorage() {
 
 function notifySessionEnd(nextMode) {
   console.log(`🔔 Notifying for next mode: ${nextMode}`);
-  chrome.runtime.sendMessage({
-    type: TIMER_STOPPED,
-    state: state.current.serialize(),
-  });
-
-  chrome.notifications.create({
-    type: "basic",
-    iconUrl: "icons/icon128.png",
-    title: "Timer Finished ⏰",
-    message: messages[nextMode] || "Session complete.",
-    priority: 1,
-  });
+  chrome.runtime
+    .sendMessage({
+      type: TIMER_STOPPED,
+      state: state.current.serialize(),
+    })
+    .catch(() => {});
+  try {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "./icons/icon128.png",
+      title: "Timer Finished ⏰",
+      message: messages[nextMode] || "Session complete.",
+      priority: 1,
+    });
+  } catch (err) {
+    console.error(err);
+  }
   updateStorage();
 }
 
+function updateBadge() {
+  const { mode } = state.current;
+  const remainingTime = state.current.getRemainingTime();
+  const minutes = Math.floor(remainingTime / 60);
+  const seconds = remainingTime - minutes * 60;
+  const text = minutes
+    ? ` ${String(minutes).padStart(2, "0")} m`
+    : `${String(seconds).padStart(2, "0")}s`;
+  chrome.action.setBadgeText({ text });
+  chrome.action.setBadgeTextColor({ color: colors[mode] });
+}
 function startBackgroundTimer() {
   if (state.current.isRunning()) return;
   state.current.start();
   updateStorage();
 
   state.current.intervalId = setInterval(() => {
-    const remainingTime = state.current.getRemainingTime();
-    const minutes = Math.floor(remainingTime / 60);
-    const seconds = remainingTime - minutes * 60;
-    const text = minutes
-      ? ` ${String(minutes).padStart(2, "0")} m`
-      : `${String(seconds).padStart(2, "0")}s`;
-    chrome.action.setBadgeText({ text });
+    updateBadge();
   }, 1000);
 
   state.current.timeoutId = setTimeout(() => {
@@ -53,15 +64,27 @@ function startBackgroundTimer() {
     chrome.action.setBadgeText({ text: `` });
     const nextMode = state.current.onEnd();
 
+    /**
+     * @todo blink icon
+     */
+    // chrome.action.setIcon({
+    //   path: {
+    //     16: "./icons/16.png",
+    //     32: "./icons/16.png",
+    //     128: "./icons/128.png",
+    //   },
+    // });
     notifySessionEnd(nextMode);
     if (state.current.isAutomatic) {
       startBackgroundTimer();
     }
   }, state.current.getRemainingTime() * 1000);
-  chrome.runtime.sendMessage({
-    type: TIMER_STARTED,
-    state: state.current.serialize(),
-  });
+  chrome.runtime
+    .sendMessage({
+      type: TIMER_STARTED,
+      state: state.current.serialize(),
+    })
+    .catch(() => {});
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -71,10 +94,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         clearInterval(state.current.intervalId);
         clearTimeout(state.current.timeoutId);
         state.current.pause();
-        chrome.runtime.sendMessage({
-          type: TIMER_PAUSED,
-          state: state.current.serialize(),
-        });
+        chrome.runtime
+          .sendMessage({
+            type: TIMER_PAUSED,
+            state: state.current.serialize(),
+          })
+          .catch(() => {});
       } else {
         startBackgroundTimer();
       }
@@ -83,9 +108,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     case RESET_TIMER: {
       clearInterval(state.current.intervalId);
+      clearTimeout(state.current.timeoutId);
       resetState();
-      remainingTime = state.current.getSessionDuration();
       updateStorage();
+      updateBadge();
+      chrome.runtime
+        .sendMessage({
+          type: TIMER_STOPPED,
+          state: state.current.serialize(),
+        })
+        .catch(() => {});
       break;
     }
     case SWITCH_MODE: {

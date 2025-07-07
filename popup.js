@@ -42,10 +42,6 @@ const onTimerPause = onTimerStop;
 
 function updateTimerDisplayFromState() {
   const remainingTime = state.current.getRemainingTime();
-  console.log(
-    `Updating timer display: remainingTime = ${remainingTime}`,
-    state.current.serialize()
-  );
 
   const minutes = String(Math.floor(remainingTime / 60)).padStart(2, "0");
   const seconds = String(remainingTime % 60).padStart(2, "0");
@@ -83,6 +79,7 @@ automaticCheckbox.addEventListener("change", (e) => {
 resetBtn.addEventListener("click", () => {
   chrome.runtime.sendMessage({ type: RESET_TIMER });
   startBtn.textContent = "Start"; // optional UI feedback
+  onTimerStop();
 });
 
 //  Switch modes
