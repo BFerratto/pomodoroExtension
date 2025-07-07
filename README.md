@@ -1,4 +1,5 @@
 # pomodoroExtension
+
 ![Alt text](icons/icon128.png)
 
 Pomodoro timer for Chrome users
@@ -7,6 +8,5 @@ Pomodoro timer for Chrome users
 - After each pomodoro session will suggest a short break - please allow notifications!
 - After for pomodoro sessions will suggest a long break.
 - Keep a pomodoro counter to keep you on track!
-
 
 HTML inspired from here: https://github.com/Freshman-tech/pomodoro-starter-files

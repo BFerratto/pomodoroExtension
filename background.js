@@ -1,4 +1,4 @@
-import { resetState, state } from './state.js';
+import { resetState, state } from "./state.js";
 import {
   AUTOMATIC_CHANGED,
   GET_STATE,
@@ -8,7 +8,7 @@ import {
   messages,
   TIMER_STARTED,
   TIMER_STOPPED,
-  TIMER_PAUSED
+  TIMER_PAUSED,
 } from "./types.js";
 
 function updateStorage() {
@@ -17,19 +17,20 @@ function updateStorage() {
 
 function notifySessionEnd(nextMode) {
   console.log(`🔔 Notifying for next mode: ${nextMode}`);
-  chrome.runtime.sendMessage({ type: TIMER_STOPPED, state: state.current.serialize() });
-
+  chrome.runtime.sendMessage({
+    type: TIMER_STOPPED,
+    state: state.current.serialize(),
+  });
 
   chrome.notifications.create({
     type: "basic",
     iconUrl: "icons/icon128.png",
     title: "Timer Finished ⏰",
     message: messages[nextMode] || "Session complete.",
-    priority: 1
+    priority: 1,
   });
   updateStorage();
 }
-
 
 function startBackgroundTimer() {
   if (state.current.isRunning()) return;
@@ -40,9 +41,10 @@ function startBackgroundTimer() {
     const remainingTime = state.current.getRemainingTime();
     const minutes = Math.floor(remainingTime / 60);
     const seconds = remainingTime - minutes * 60;
-    const text = minutes ? ` ${String(minutes).padStart(2, '0')} m` : `${String(seconds).padStart(2, '0')}s`;
+    const text = minutes
+      ? ` ${String(minutes).padStart(2, "0")} m`
+      : `${String(seconds).padStart(2, "0")}s`;
     chrome.action.setBadgeText({ text });
-
   }, 1000);
 
   state.current.timeoutId = setTimeout(() => {
@@ -56,8 +58,10 @@ function startBackgroundTimer() {
       startBackgroundTimer();
     }
   }, state.current.getRemainingTime() * 1000);
-  chrome.runtime.sendMessage({ type: TIMER_STARTED, state: state.current.serialize() });
-
+  chrome.runtime.sendMessage({
+    type: TIMER_STARTED,
+    state: state.current.serialize(),
+  });
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -67,8 +71,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         clearInterval(state.current.intervalId);
         clearTimeout(state.current.timeoutId);
         state.current.pause();
-        chrome.runtime.sendMessage({ type: TIMER_PAUSED, state: state.current.serialize() });
-
+        chrome.runtime.sendMessage({
+          type: TIMER_PAUSED,
+          state: state.current.serialize(),
+        });
       } else {
         startBackgroundTimer();
       }
@@ -84,8 +90,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     case SWITCH_MODE: {
       clearInterval(state.current.intervalId);
-      state.current.stop()
-      remainingTime = state.current.getSessionDuration()
+      state.current.stop();
+      remainingTime = state.current.getSessionDuration();
       updateStorage();
       break;
     }
@@ -94,9 +100,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
     }
     case AUTOMATIC_CHANGED: {
-      state.current.isAutomatic = message.isAutomatic
+      state.current.isAutomatic = message.isAutomatic;
       break;
     }
   }
 });
-
